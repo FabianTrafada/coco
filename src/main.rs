@@ -9,6 +9,7 @@ use coco::{formatters, git, providers, ui};
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Cli::parse();
+    check_for_update().await;
 
     let mut config = Config::load().unwrap_or_else(|_| Config::default());
     config.apply_overrides(args.provider, args.model);
@@ -99,6 +100,34 @@ async fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+async fn check_for_update() {
+    let current = env!("CARGO_PKG_VERSION");
+
+    let Ok(response) = reqwest::Client::new()
+        .get("https://api.github.com/repos/FabianTrafada/coco/releases/latest")
+        .header("User-Agent", "coco")
+        .send()
+        .await
+    else {
+        return;
+    };
+
+    let Ok(json) = response.json::<serde_json::Value>().await else {
+        return;
+    };
+
+    let Some(latest) = json["tag_name"].as_str() else {
+        return;
+    };
+
+    // strip "v" prefix — "v0.1.1" → "0.1.1"
+    let latest_clean = latest.trim_start_matches('v');
+
+    if latest_clean != current {
+        ui::print_update_available(current, latest_clean);
+    }
 }
 
 fn commit_and_exit(message: &str) {

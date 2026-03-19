@@ -64,6 +64,22 @@ pub fn print_staged_diff(diff: &StagedDiff) {
     println!();
 }
 
+pub fn print_update_available(current: &str, latest: &str) {
+    println!();
+    println!(
+        "  {} New version available: {} → {}",
+        "↑".bright_yellow(),
+        current.dimmed(),
+        latest.bright_yellow()
+    );
+    println!(
+        "  {} Run: {}",
+        " ".dimmed(),
+        "curl -fsSL https://raw.githubusercontent.com/FabianTrafada/coco/main/install.sh | sh".bright_white()
+    );
+    println!();
+}
+
 pub fn print_suggested_message(message: &str) {
     println!("  Suggested commit message:");
 
