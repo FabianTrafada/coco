@@ -1,15 +1,15 @@
 use anyhow::Result;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct CoreConfig {
     pub format: Option<String>,
     pub language: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ProviderConfig {
     pub name: Option<String>,
     pub model: Option<String>,
@@ -17,7 +17,7 @@ pub struct ProviderConfig {
     pub api_key: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Config {
     pub core: Option<CoreConfig>,
     pub provider: Option<ProviderConfig>,
@@ -55,11 +55,17 @@ impl Default for Config {
 impl Config {
     pub fn load() -> Result<Self> {
         let path = config_path();
-
+    
         if !path.exists() {
-            return Ok(Self::default());
+            let default = Self::default();
+            if let Some(parent) = path.parent() {
+                fs::create_dir_all(parent)?;
+            }
+            let toml_str = toml::to_string_pretty(&default)?;
+            fs::write(&path, toml_str)?;
+            return Ok(default);
         }
-
+    
         let content = fs::read_to_string(path)?;
         let config: Config = toml::from_str(&content)?;
         Ok(config)
