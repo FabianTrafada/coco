@@ -20,15 +20,36 @@
 
 ### Prerequisites
 
-- [Rust](https://rustup.rs/) 1.85+ (edition 2024)
 - [Ollama](https://ollama.com/) running locally
+
+### Linux & macOS
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/FabianTrafada/coco/main/install.sh | sh
+```
+
+### Windows
+
+```powershell
+irm https://raw.githubusercontent.com/FabianTrafada/coco/main/install.ps1 | iex
+```
 
 ### From source
 
 ```bash
-git clone https://github.com/yourusername/coco
+git clone https://github.com/FabianTrafada/coco
 cd coco
 cargo install --path .
+```
+
+### Uninstall
+
+```sh
+# Linux & macOS
+sudo rm /usr/local/bin/coco
+
+# Windows
+Remove-Item "$env:USERPROFILE\.coco\bin\coco.exe"
 ```
 
 ---
