@@ -4,28 +4,6 @@
 
 ![coco preview](.github/assets/coco-preview.webp)
 
-```ansi
-[97m~[0m / [32mmy-project[0m $ coco
-
-  [95m✦[0m Analyzing staged changes...
-
-  ┌──────────────────────────────────────────────┐
-  │  [33mM[0m  src/auth/token.rs          [32m+84[0m  [31m-12[0m      │
-  │  [32mA[0m  src/auth/refresh.rs        [32m+120[0m   [2m-0[0m     │
-  │  [31mD[0m  src/auth/legacy_token.rs     [2m+0[0m  [31m-45[0m     │
-  └──────────────────────────────────────────────┘
-     3 files changed  [32m+204[0m  [31m-57[0m
-
-  Suggested commit message:
-  ┌──────────────────────────────────────────────┐
-  │ feat(auth): add JWT refresh token support    │
-  │ and remove legacy token handler              │
-  └──────────────────────────────────────────────┘
-
-  [94m[C]ommit[0m  [E]dit  [R]egenerate  [31m[A]bort[0m
-  > _
-```
-
 ---
 
 ## Features

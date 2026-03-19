@@ -19,21 +19,27 @@ jobs:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-musl
             artifact: coco-linux-x86_64
+            use_cross: false
           - os: ubuntu-latest
             target: aarch64-unknown-linux-musl
             artifact: coco-linux-aarch64
+            use_cross: true
           - os: macos-latest
             target: x86_64-apple-darwin
             artifact: coco-macos-x86_64
+            use_cross: false
           - os: macos-latest
             target: aarch64-apple-darwin
             artifact: coco-macos-aarch64
+            use_cross: false
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             artifact: coco-windows-x86_64.exe
+            use_cross: false
           - os: windows-latest
             target: aarch64-pc-windows-msvc
             artifact: coco-windows-aarch64.exe
+            use_cross: false
 
     steps:
       - name: Checkout
@@ -44,11 +50,20 @@ jobs:
         with:
           targets: ${{ matrix.target }}
 
-      - name: Install musl tools (Linux only)
-        if: contains(matrix.target, 'musl')
+      - name: Install musl tools (Linux x86_64 only)
+        if: matrix.target == 'x86_64-unknown-linux-musl'
         run: sudo apt-get install -y musl-tools
 
-      - name: Build
+      - name: Install cross (Linux aarch64 only)
+        if: matrix.use_cross == true
+        run: cargo install cross --git https://github.com/cross-rs/cross
+
+      - name: Build (cross)
+        if: matrix.use_cross == true
+        run: cross build --release --target ${{ matrix.target }}
+
+      - name: Build (cargo)
+        if: matrix.use_cross == false
         run: cargo build --release --target ${{ matrix.target }}
 
       - name: Rename binary (Linux & macOS)
