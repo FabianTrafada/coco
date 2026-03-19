@@ -21,8 +21,7 @@ pub fn print_staged_diff(diff: &StagedDiff) {
         .max()
         .unwrap_or(0);
 
-    // 2 + 1(status) + 2 + max_path + 2 + max_add + 2 + max_del + 2 = +11
-    let inner_width = max_path_len + max_add_len + max_del_len + 11;
+    let inner_width = (max_path_len + max_add_len + max_del_len + 11).min(100);
     let border = "─".repeat(inner_width);
 
     println!("  ┌{}┐", border);
@@ -32,10 +31,9 @@ pub fn print_staged_diff(diff: &StagedDiff) {
         let additions_colored = colorize_additions(file);
         let deletions_colored = colorize_deletions(file);
 
-        // padding dihitung dari raw string, bukan colored
-        let path_pad = " ".repeat(max_path_len - file.path.len());
-        let add_pad  = " ".repeat(max_add_len - format!("+{}", file.additions).len());
-        let del_pad  = " ".repeat(max_del_len - format!("-{}", file.deletions).len());
+        let path_pad = " ".repeat(max_path_len.saturating_sub(file.path.len()));
+        let add_pad  = " ".repeat(max_add_len.saturating_sub(format!("+{}", file.additions).len()));
+        let del_pad  = " ".repeat(max_del_len.saturating_sub(format!("-{}", file.deletions).len()));
 
         println!(
             "  │  {}  {}{}  {}{}  {}{}  │",
@@ -51,8 +49,8 @@ pub fn print_staged_diff(diff: &StagedDiff) {
 
     println!("  └{}┘", border);
 
-    let total_add_pad = " ".repeat(max_add_len - format!("+{}", diff.total_additions).len());
-    let total_del_pad = " ".repeat(max_del_len - format!("-{}", diff.total_deletions).len());
+    let total_add_pad = " ".repeat(max_add_len.saturating_sub(format!("+{}", diff.total_additions).len()));
+    let total_del_pad = " ".repeat(max_del_len.saturating_sub(format!("-{}", diff.total_deletions).len()));
 
     println!(
         "     {} files changed  {}{}  {}{}",
