@@ -77,14 +77,19 @@ fn build_prompt(diff: &str, format: &str, language: &str) -> String {
     };
 
     format!(
-        "You are a git commit message generator.\n\
+        "You are a git commit message generator. Your ONLY job is to output a single-line commit message.\n\
          {format_instruction}\n\
          Language: {language}\n\n\
          STRICT RULES:\n\
-         - Output ONLY the commit message, one line\n\
-         - NO explanations, NO bullet points, NO markdown, NO code review\n\
-         - NO headers, NO suggestions, NO additional text\n\
-         - Maximum 72 characters\n\n\
+         - Output ONLY the commit message, one line, nothing else\n\
+         - Do NOT review the code\n\
+         - Do NOT explain what the code does\n\
+         - Do NOT list changes or provide bullet points\n\
+         - Do NOT add markdown formatting\n\
+         - Do NOT add headers, suggestions, or additional text\n\
+         - Do NOT wrap the message in quotes\n\
+         - Maximum 72 characters\n\
+         - Your entire response must be ONLY the commit message\n\n\
          Git diff:\n\
          {diff}"
     )
