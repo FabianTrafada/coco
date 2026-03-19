@@ -7,7 +7,7 @@ Thanks for your interest in contributing! coco is designed to be easy to extend 
 ## Getting Started
 
 ```bash
-git clone https://github.com/yourusername/coco
+git clone https://github.com/FabianTrafada/coco
 cd coco
 cargo build
 ```
