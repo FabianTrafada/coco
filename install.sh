@@ -1,22 +1,15 @@
 #!/bin/sh
-set -e
+set -eu
+
+red="$((/usr/bin/tput bold || :; /usr/bin/tput setaf 1 || :) 2>&-)"
+plain="$((/usr/bin/tput sgr0 || :) 2>&-)"
+
+status()  { echo ">>> $*"; }
+error()   { echo "${red}ERROR:${plain} $*"; exit 1; }
+warning() { echo "${red}WARNING:${plain} $*"; }
 
 REPO="FabianTrafada/coco"
-BINARY="coco"
 INSTALL_DIR="/usr/local/bin"
-
-# Colors
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-RESET='\033[0m'
-
-info()  { echo "  $1"; }
-ok()    { echo "  ${GREEN}✓${RESET} $1"; }
-error() { echo "  ${RED}✗${RESET} $1"; exit 1; }
-
-echo ""
-echo "  Installing coco 🥥"
-echo ""
 
 # Detect OS
 OS="$(uname -s)"
@@ -34,39 +27,34 @@ case "$ARCH" in
   *) error "Unsupported architecture: $ARCH" ;;
 esac
 
-info "Detected: $OS/$ARCH"
+# Sudo
+SUDO=
+if [ "$(id -u)" -ne 0 ]; then
+  if ! command -v sudo >/dev/null; then
+    error "This script requires superuser permissions. Please re-run as root."
+  fi
+  SUDO="sudo"
+fi
 
 # Get latest release tag
-info "Fetching latest version..."
+status "Fetching latest version..."
 TAG=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" \
   | grep '"tag_name"' \
   | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')
 
-if [ -z "$TAG" ]; then
-  error "Could not fetch latest release. Check your internet connection."
-fi
+[ -z "$TAG" ] && error "Could not fetch latest version. Check your internet connection."
 
-info "Latest version: $TAG"
-
-# Build download URL
+# Download
 ARTIFACT="coco-${OS}-${ARCH}"
 URL="https://github.com/$REPO/releases/download/$TAG/$ARTIFACT"
 
-# Download
-info "Downloading $ARTIFACT..."
-curl -fsSL "$URL" -o "/tmp/coco" || error "Download failed. URL: $URL"
+status "Downloading coco $TAG..."
+curl --fail --show-error --location --progress-bar "$URL" -o "/tmp/coco" \
+  || error "Download failed: $URL"
 chmod +x "/tmp/coco"
 
 # Install
-if mv "/tmp/coco" "$INSTALL_DIR/$BINARY" 2>/dev/null; then
-  ok "Installed to $INSTALL_DIR/$BINARY"
-else
-  sudo mv "/tmp/coco" "$INSTALL_DIR/$BINARY"
-  ok "Installed to $INSTALL_DIR/$BINARY"
-fi
+status "Installing coco to $INSTALL_DIR..."
+$SUDO mv "/tmp/coco" "$INSTALL_DIR/coco"
 
-echo ""
-ok "coco $TAG installed successfully!"
-echo ""
-echo "  Run 'coco --help' to get started."
-echo ""
+status "Install complete. Run 'coco --help' to get started."
