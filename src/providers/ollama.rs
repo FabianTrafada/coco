@@ -69,21 +69,22 @@ impl Provider for OllamaProvider {
 fn build_prompt(diff: &str, format: &str, language: &str) -> String {
     let format_instruction = match format {
         "conventional" => {
-            "Use conventional commits format: <type>(<scope>): <description>\n\
+            "Output ONLY a conventional commit message: <type>(<scope>): <description>\n\
              Types: feat, fix, chore, refactor, docs, style, test, perf, ci\n\
-             Example: feat(auth): add JWT refresh token support"
+             Example: feat(billing): add Polar checkout and portal session"
         }
-        _ => "Write a clear, concise commit message describing what changed and why.",
+        _ => "Output ONLY a short commit message, nothing else.",
     };
 
     format!(
-        "You are an expert developer writing a git commit message.\n\
+        "You are a git commit message generator.\n\
          {format_instruction}\n\
-         Language: {language}\n\
-         Rules:\n\
-         - Be concise, max 72 characters for the first line\n\
-         - Only output the commit message, nothing else\n\
-         - No backticks, no explanations, no extra text\n\n\
+         Language: {language}\n\n\
+         STRICT RULES:\n\
+         - Output ONLY the commit message, one line\n\
+         - NO explanations, NO bullet points, NO markdown, NO code review\n\
+         - NO headers, NO suggestions, NO additional text\n\
+         - Maximum 72 characters\n\n\
          Git diff:\n\
          {diff}"
     )
