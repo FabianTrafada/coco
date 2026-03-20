@@ -84,6 +84,16 @@ coco -p openai -m gpt-4o      # use different provider
 coco -p ollama -m qwen3.5 -y  # combine flags
 ```
 
+### Large diffs & performance
+
+If your staged diff is very large, sending the full patch to Ollama can take a long time (most of the wait is **prompt evaluation** on your machine). By default, **coco** sends a **file-level summary** to the model when the staged diff exceeds ~50k characters; the full diff is still shown in the terminal summary above.
+
+To force sending the entire unified diff to the model:
+
+```bash
+COCO_LLM_FULL_DIFF=1 coco
+```
+
 ---
 
 ## Configuration

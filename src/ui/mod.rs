@@ -96,6 +96,31 @@ pub fn print_suggested_message(message: &str) {
     println!();
 }
 
+pub fn print_generation_stats(elapsed_ms: u128, prompt_tokens: Option<u32>, completion_tokens: Option<u32>, total_tokens: Option<u32>) {
+    let elapsed = format!("{} ms", elapsed_ms).bright_white().to_string();
+    let token_text = match (prompt_tokens, completion_tokens, total_tokens) {
+        (Some(prompt), Some(completion), Some(total)) => {
+            format!(
+                "prompt {} + completion {} = total {}",
+                prompt.to_string().cyan(),
+                completion.to_string().cyan(),
+                total.to_string().bright_cyan()
+            )
+        }
+        (Some(prompt), Some(completion), None) => {
+            format!(
+                "prompt {} + completion {}",
+                prompt.to_string().cyan(),
+                completion.to_string().cyan()
+            )
+        }
+        _ => "n/a".dimmed().to_string(),
+    };
+
+    println!("  {} {}  {} {}", "⏱".bright_blue(), elapsed, "• tokens:".dimmed(), token_text);
+    println!();
+}
+
 pub fn print_analyzing() {
     println!();
     println!("  {} Analyzing staged changes...", "✦".bright_purple());

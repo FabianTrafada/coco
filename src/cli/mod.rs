@@ -15,4 +15,7 @@ pub struct Cli {
     
     #[arg(short = 'm', long = "model")]
     pub model: Option<String>,
+
+    #[arg(short = 'd', long = "debug")]
+    pub debug: bool,
 }

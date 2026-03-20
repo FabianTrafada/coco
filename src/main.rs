@@ -1,5 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
+use owo_colors::OwoColorize;
+use std::time::Instant;
 
 use coco::cli::Cli;
 use coco::config::Config;
@@ -43,7 +45,7 @@ async fn main() -> Result<()> {
 
     ui::print_staged_diff(&diff);
 
-    let provider = match providers::get_provider(provider_name, model, base_url) {
+    let provider = match providers::get_provider(provider_name, model, base_url, args.debug) {
         Ok(p) => p,
         Err(e) => {
             ui::print_error(&format!("{}", e));
@@ -53,22 +55,47 @@ async fn main() -> Result<()> {
 
     let formatter = formatters::get_formatter(format);
 
-    let mut message = match provider.generate(&diff.raw_diff, format, language).await {
-        Ok(m) => formatter.format(&m),
+    let (llm_context, condensed) = diff.context_for_llm();
+    if condensed {
+        println!(
+            "  {} Large staged diff: using OpenCode-style git context (stat/name-status/status + capped -U0 excerpt). Set {} to send the full patch.",
+            "✦".bright_purple(),
+            "COCO_LLM_FULL_DIFF=1".bright_white()
+        );
+        println!();
+    }
+
+    let first_start = Instant::now();
+    let mut generation = match provider.generate(&llm_context, format, language).await {
+        Ok(g) => g,
         Err(e) => {
             ui::print_error(&format!("{}", e));
             std::process::exit(1);
         }
     };
+    let mut last_elapsed_ms = first_start.elapsed().as_millis();
+    let mut message = formatter.format(&generation.message);
 
     if args.always_trust {
         ui::print_suggested_message(&message);
+        ui::print_generation_stats(
+            last_elapsed_ms,
+            generation.metadata.prompt_tokens,
+            generation.metadata.completion_tokens,
+            generation.metadata.total_tokens,
+        );
         commit_and_exit(&message);
         return Ok(());
     }
 
     loop {
         ui::print_suggested_message(&message);
+        ui::print_generation_stats(
+            last_elapsed_ms,
+            generation.metadata.prompt_tokens,
+            generation.metadata.completion_tokens,
+            generation.metadata.total_tokens,
+        );
 
         match ui::prompt_action()? {
             Action::Commit => {
@@ -81,13 +108,17 @@ async fn main() -> Result<()> {
             Action::Regenerate => {
                 println!();
                 ui::print_analyzing();
-                message = match provider.generate(&diff.raw_diff, format, language).await {
-                    Ok(m) => formatter.format(&m),
+                let regenerate_start = Instant::now();
+                let (ctx, _) = diff.context_for_llm();
+                generation = match provider.generate(&ctx, format, language).await {
+                    Ok(g) => g,
                     Err(e) => {
                         ui::print_error(&format!("{}", e));
                         std::process::exit(1);
                     }
                 };
+                last_elapsed_ms = regenerate_start.elapsed().as_millis();
+                message = formatter.format(&generation.message);
             }
             Action::Abort => {
                 ui::print_aborted();
